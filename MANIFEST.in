@@ -1,0 +1,9 @@
+include LICENSES/ISC.txt
+include NEWS
+include README.md
+include doc/_static/custom.css
+include doc/conf.py
+include doc/index.rst
+include doc/overview.rst
+include doc/reference.rst
+include serd.pyx

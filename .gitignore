@@ -1,0 +1,5 @@
+build/**
+dist/**
+python-serd.egg-info/**
+__pycache__
+test/__pycache__

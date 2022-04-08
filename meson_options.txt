@@ -1,0 +1,2 @@
+option('tests', type: 'boolean', value: true, yield: true,
+       description: 'Build tests')
