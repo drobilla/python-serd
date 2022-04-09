@@ -9,9 +9,12 @@ x64:
   script:
     - meson setup build/meson --prefix=$(pwd)/build/opt/ -Dbuildtype=release -Dserd:docs=disabled -Dpython.platlibdir=$(pwd)/opt/lib/python/site-packages/ -Dpython.purelibdir=$(pwd)/opt/lib/python/site-packages/
     - meson install -C build/meson
-    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig CYTHONIZE=1 pyproject-build -n
-    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig LD_LIBRARY_PATH=build/opt/lib python3 setup.py build test doctest
-    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig LD_LIBRARY_PATH=build/opt/lib python3 setup.py build_sphinx
+    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig CYTHONIZE=1 ./setup.py sdist
+    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig pyproject-build -n
+    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig LD_LIBRARY_PATH=build/opt/lib ./setup.py build
+    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig PYTHONPATH=build/opt/lib/python3.9/site-packages LD_LIBRARY_PATH=build/opt/lib ./setup.py test
+    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig PYTHONPATH=build/opt/lib/python3.9/site-packages LD_LIBRARY_PATH=build/opt/lib ./setup.py doctest
+    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig PYTHONPATH=build/opt/lib/python3.9/site-packages LD_LIBRARY_PATH=build/opt/lib ./setup.py build_sphinx
   artifacts:
     paths:
       - build/sphinx/html
