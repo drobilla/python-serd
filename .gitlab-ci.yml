@@ -27,13 +27,13 @@ x64:
 pages:
   stage: deploy
   script:
-    - mkdir public
-    - mkdir public/html
-    - mkdir public/singlehtml
-    - mv build/sphinx/html/ public/html/
-    - mv build/sphinx/singlehtml/ public/singlehtml/
-    - mv build/sphinx/epub/Using-Serd-in-Python.epub public/
-  dependencies:
+    - mkdir -p .public/html
+    - mkdir -p .public/singlehtml
+    - mv build/sphinx/html .public/
+    - mv build/sphinx/singlehtml .public/
+    - mv build/sphinx/epub/Using-Serd-in-Python.epub .public/
+    - mv .public public
+  needs:
     - x64
   artifacts:
     paths:
