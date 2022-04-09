@@ -1,0 +1,39 @@
+stages:
+  - build
+  - deploy
+
+
+x64:
+  stage: build
+  image: lv2plugin/debian-x64
+  script:
+    - meson setup build/meson --prefix=$(pwd)/build/opt/ -Dbuildtype=release -Dserd:docs=disabled -Dpython.platlibdir=$(pwd)/opt/lib/python/site-packages/ -Dpython.purelibdir=$(pwd)/opt/lib/python/site-packages/
+    - meson install -C build/meson
+    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig pyproject-build -n
+    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig LD_LIBRARY_PATH=build/opt/lib CYTHONIZE=1 python3 setup.py build test doctest
+    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig LD_LIBRARY_PATH=build/opt/lib python3 setup.py build_sphinx
+  artifacts:
+    paths:
+      - build/sphinx/html
+      - build/sphinx/singlehtml
+      - build/sphinx/epub/Using-Serd-in-Python.epub
+      - dist/python-serd-1.0.1.tar.gz
+      - dist/python_serd-1.0.1-cp39-cp39-linux_x86_64.whl
+
+
+pages:
+  stage: deploy
+  script:
+    - mkdir public
+    - mkdir public/html
+    - mkdir public/singlehtml
+    - mv build/sphinx/html/ public/html/
+    - mv build/sphinx/singlehtml/ public/singlehtml/
+    - mv build/sphinx/epub/Using-Serd-in-Python.epub public/
+  dependencies:
+    - x64_dbg
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
