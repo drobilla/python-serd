@@ -3,7 +3,7 @@ Upstream-Name: serd-python
 Upstream-Contact: David Robillard <d@drobilla.net>
 Source: https://gitlab.com/drobilla/serd-python
 
-Files: *.md .git* MANIFEST.in NEWS meson.build meson_options.txt
+Files: *.md .git* MANIFEST.in NEWS meson.build meson_options.txt subprojects/serd.wrap
 Copyright: 2020-2022 David Robillard <d@drobilla.net>
 License: CC0-1.0 OR ISC
 
