@@ -31,7 +31,7 @@ pages:
     - mv build/sphinx/singlehtml/ public/singlehtml/
     - mv build/sphinx/epub/Using-Serd-in-Python.epub public/
   dependencies:
-    - x64_dbg
+    - x64
   artifacts:
     paths:
       - public
