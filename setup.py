@@ -20,10 +20,15 @@ def pkgconfig(package):
     """Return Extension arguments for a pkg-config package."""
 
     flag_map = {"-I": "include_dirs", "-L": "library_dirs", "-l": "libraries"}
-    output = subprocess.getoutput(f"pkg-config --cflags --libs {package}")
+    output = subprocess.run(
+        ["pkg-config", "--cflags", "--libs", f"{package}"],
+        capture_output=True,
+        check=True,
+        encoding="utf-8",
+    )
 
     result = {}
-    for token in output.strip().split():
+    for token in output.stdout.strip().split():
         result.setdefault(flag_map.get(token[:2]), []).append(token[2:])
 
     return result
