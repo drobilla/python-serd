@@ -25,7 +25,6 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 project = "Serd"
 copyright = "2021-2022, David Robillard"
 author = "David Robillard"
-release = "0.0.0"  # FIXME
 
 
 # General configuration
@@ -58,6 +57,7 @@ except ModuleNotFoundError:
 
 html_copy_source = False
 html_short_title = "Serd"
+html_title = "Using Serd in Python"
 html_static_path = ["_static"]
 html_theme = "sphinx_lv2_theme"
 
@@ -119,3 +119,12 @@ else:
         "globaltoc_maxdepth": 1,
         "globaltoc_collapse": True,
     }
+
+# EPub output
+
+epub_show_urls = "no"
+epub_cover = ("_static/serd.svg", "")
+epub_description = "Serd, a lightweight library for working with RDF"
+epub_title = "Using Serd in Python"
+epub_basename = "Using-Serd-in-Python"
+epub_css_files = ["epubstyle.css"]
