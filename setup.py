@@ -1,7 +1,7 @@
+#!/usr/bin/env python3
+
 # Copyright 2020-2022 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: CC0-1.0 OR ISC
-
-#!/usr/bin/env python3
 
 """The configuration script for serd-python."""
 
@@ -20,15 +20,12 @@ def pkgconfig(package):
     """Return Extension arguments for a pkg-config package."""
 
     flag_map = {"-I": "include_dirs", "-L": "library_dirs", "-l": "libraries"}
-    output = subprocess.run(
-        ["pkg-config", "--cflags", "--libs", f"{package}"],
-        capture_output=True,
-        check=True,
-        encoding="utf-8",
-    )
+    output = subprocess.check_output(
+        ["pkg-config", "--cflags", "--libs", package],
+    ).decode("utf-8")
 
     result = {}
-    for token in output.stdout.strip().split():
+    for token in output.strip().split():
         result.setdefault(flag_map.get(token[:2]), []).append(token[2:])
 
     return result
@@ -53,6 +50,30 @@ if CYTHONIZE:
     )
 else:
     extensions = [serd_ext]
+
+# pragma pylint: disable=import-outside-toplevel
+
+
+class Test(Command):
+    """A command to run the unit tests."""
+
+    description = "Run unit tests"
+    user_options = []
+
+    def initialize_options(self):
+        """Set default values for all the options that this command supports."""
+
+    def finalize_options(self):
+        """Set final values for all the options that this command supports."""
+
+    def run(self):
+        """Run the command, calling sphinx to run the doctests."""
+
+        import unittest
+
+        suite = unittest.defaultTestLoader.discover("test")
+        runner = unittest.TextTestRunner(verbosity=1)
+        result = runner.run(suite)
 
 
 class Doctest(Command):
@@ -85,18 +106,19 @@ class Doctest(Command):
         self.announce("Running doctests with sphinx")
         sph.build()
 
-        # pragma pylint: enable=import-outside-toplevel
 
+# pragma pylint: enable=import-outside-toplevel
 
 with open("README.md", "r", encoding="utf-8") as readme_md:
     long_description = readme_md.read()
 
 setup(
     extras_require={
+        "dev": ["cython"],
         "build_sphinx": ["sphinx>=4.0.0", "sphinx-lv2-theme"],
         "doctest": ["sphinx>=4.0.0"],
     },
-    cmdclass={"doctest": Doctest},
+    cmdclass={"doctest": Doctest, "test": Test},
     name="python-serd",
     version=VERSION,
     description="A lightweight library for working with RDF data",
