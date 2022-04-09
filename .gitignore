@@ -1,5 +1,5 @@
+__pycache__
 build/**
 dist/**
-python-serd.egg-info/**
-__pycache__
+python_serd.egg-info/**
 test/__pycache__
