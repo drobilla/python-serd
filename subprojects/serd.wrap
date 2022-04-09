@@ -1,0 +1,5 @@
+[wrap-git]
+url = https://gitlab.com/drobilla/serd.git
+push-url = git@gitlab.com:drobilla/serd.git
+revision = 1.x
+depth = 1
