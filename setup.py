@@ -10,11 +10,6 @@ import subprocess
 
 from setuptools import setup, Command, Extension
 
-try:
-    from Cython.Build import cythonize
-except ImportError:
-    cythonize = None
-
 
 def pkgconfig(package):
     """Return Extension arguments for a pkg-config package."""
@@ -38,9 +33,11 @@ extensions = [Extension("serd", ["serd.pyx"], **serd_config)]
 serd_cython_ext = Extension("serd", ["serd.pyx"], **serd_config)
 serd_ext = Extension("serd", ["serd.c"], **serd_config)
 
-CYTHONIZE = bool(int(os.getenv("CYTHONIZE", "0"))) and cythonize is not None
+CYTHONIZE = bool(int(os.getenv("CYTHONIZE", "0")))
 
 if CYTHONIZE:
+    from Cython.Build import cythonize
+
     extensions = cythonize(
         [serd_cython_ext],
         compiler_directives={
@@ -73,7 +70,7 @@ class Test(Command):
 
         suite = unittest.defaultTestLoader.discover("test")
         runner = unittest.TextTestRunner(verbosity=1)
-        result = runner.run(suite)
+        runner.run(suite)
 
 
 class Doctest(Command):
