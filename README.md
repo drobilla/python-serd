@@ -9,7 +9,17 @@ Requirements
 ------------
 
 Building this package requires serd to be installed.
-Specifically, `pkg-config` must be able to find `serd-1`.
+Specifically, [pkg-config][] must be able to find `serd-1`:
+
+    pkg-config --modversion serd-1
+
+Note that if serd is installed to a non-standard prefix,
+you will need to configure `PKG_CONFIG_PATH` in your environment.
+See the [guide to pkg-config](https://people.freedesktop.org/~dbn/pkg-config-guide.html) for more information.
+
+The [pip][] packages `wheel`, `cython`, and `sphinx` are required for building:
+
+    pip install wheel cython sphinx
 
 A meson configuration is included that can fetch and build serd as a submodule,
 and build these bindings against that library,
@@ -24,7 +34,7 @@ This package can be installed with `pip`:
     pip install .
 
 By default, this will install locally for your user only.
-For other possibilities, consule the `pip` documentation.
+For other possibilities, consult the `pip` documentation.
 
 Note that the generated C sources are not stored in git.
 To build from a git clone, `CYTHONIZE` must be enabled in the environment:
@@ -60,6 +70,8 @@ The generated documentation can then be found in `build/sphinx`.
  -- David Robillard <d@drobilla.net>
 
 [Turtle]: https://www.w3.org/TR/turtle/
-[TriG]: https://www.w3.org/TR/trig/
 [NTriples]: https://www.w3.org/TR/n-triples/
 [NQuads]: https://www.w3.org/TR/n-quads/
+[TriG]: https://www.w3.org/TR/trig/
+[pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
+[pip]: https://pypi.org/project/pip/
