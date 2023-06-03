@@ -14,12 +14,14 @@ x64:
     - PKG_CONFIG_PATH=build/opt/lib/pkgconfig LD_LIBRARY_PATH=build/opt/lib ./setup.py build
     - PKG_CONFIG_PATH=build/opt/lib/pkgconfig PYTHONPATH=build/opt/lib/python3.9/site-packages LD_LIBRARY_PATH=build/opt/lib ./setup.py test
     - PKG_CONFIG_PATH=build/opt/lib/pkgconfig PYTHONPATH=build/opt/lib/python3.9/site-packages LD_LIBRARY_PATH=build/opt/lib ./setup.py doctest
-    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig PYTHONPATH=build/opt/lib/python3.9/site-packages LD_LIBRARY_PATH=build/opt/lib ./setup.py build_sphinx
+    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig PYTHONPATH=build/opt/lib/python3.9/site-packages LD_LIBRARY_PATH=build/opt/lib sphinx-build -M epub doc build/doc/ -E -W -a -q
+    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig PYTHONPATH=build/opt/lib/python3.9/site-packages LD_LIBRARY_PATH=build/opt/lib sphinx-build -M html doc build/doc/ -E -W -a -q
+    - PKG_CONFIG_PATH=build/opt/lib/pkgconfig PYTHONPATH=build/opt/lib/python3.9/site-packages LD_LIBRARY_PATH=build/opt/lib sphinx-build -M singlehtml doc build/doc/ -E -W -a -q
   artifacts:
     paths:
-      - build/sphinx/html
-      - build/sphinx/singlehtml
-      - build/sphinx/epub/Using-Serd-in-Python.epub
+      - build/doc/epub/Using-Serd-in-Python.epub
+      - build/doc/html
+      - build/doc/singlehtml
       - dist/python-serd-1.0.1.tar.gz
       - dist/python_serd-1.0.1-cp39-cp39-linux_x86_64.whl
 
@@ -27,10 +29,9 @@ x64:
 pages:
   stage: deploy
   script:
-    - mkdir -p .public/html
-    - mkdir -p .public/singlehtml
-    - mv build/sphinx/html .public/
-    - mv build/sphinx/singlehtml .public/
+    - mkdir -p .public
+    - mv build/doc/html/ .public/
+    - mv build/doc/singlehtml/ .public/
     - mv build/sphinx/epub/Using-Serd-in-Python.epub .public/
     - mv .public public
   needs:

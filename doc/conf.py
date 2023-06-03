@@ -25,6 +25,9 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 project = "Serd"
 copyright = "2021-2022, David Robillard"
 author = "David Robillard"
+release = "1.0.1"
+version = "1.0.1"
+desc = "A lightweight library for working with RDF"
 
 
 # General configuration
@@ -74,7 +77,7 @@ if have_lv2_theme:
         html_theme_options = {
             "body_max_width": "48em",
             "body_min_width": "48em",
-            "description": "A lightweight library for working with RDF",
+            "description": desc,
             "show_footer_version": True,
             "show_logo_version": False,
             "logo": "serd.svg",
@@ -91,7 +94,7 @@ if have_lv2_theme:
         html_theme_options = {
             "body_max_width": "60em",
             "body_min_width": "40em",
-            "description": "A lightweight library for working with RDF",
+            "description": desc,
             "show_footer_version": True,
             "show_logo_version": False,
             "logo": "serd.svg",
@@ -111,7 +114,7 @@ else:
     html_theme_options = {
         "body_max_width": "60em",
         "body_min_width": "40em",
-        "description": "A lightweight library for working with RDF",
+        "description": desc,
         "logo": "serd.svg",
         "logo_name": True,
         "page_width": "60em",

@@ -46,8 +46,8 @@ Documentation
 
 The latest API reference documentation is available online:
 
-   * [Paginated HTML](https://drobilla.gitlab.io/python-serd/html)
-   * [Single page HTML](https://drobilla.gitlab.io/python-serd/singlehtml)
+   * [Paginated HTML](https://drobilla.gitlab.io/python-serd/html/)
+   * [Single page HTML](https://drobilla.gitlab.io/python-serd/singlehtml/)
    * [EPUB](https://drobilla.gitlab.io/python-serd/Using-Serd-in-Python.epub)
 
 Development
