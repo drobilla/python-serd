@@ -73,7 +73,7 @@ test('serd.pyx',
      suite: ['bindings', 'python'])
 
 # Run doctests
-if get_option('tests')
+if not get_option('tests').disabled()
   sphinx_build = find_program('sphinx-build')
 
   # Set up an environment for loading the module from the build directory

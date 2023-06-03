@@ -7,7 +7,7 @@ x64:
   stage: build
   image: lv2plugin/debian-x64
   script:
-    - meson setup build/meson --prefix=$(pwd)/build/opt/ -Dbuildtype=release -Dtests=false -Dexess:docs=disabled -Dserd:docs=disabled -Dpython.platlibdir=$(pwd)/opt/lib/python/site-packages/ -Dpython.purelibdir=$(pwd)/opt/lib/python/site-packages/
+    - meson setup build/meson --prefix=$(pwd)/build/opt/ -Dbuildtype=release -Dtests=enabled -Dexess:docs=disabled -Dserd:docs=disabled -Dzix:docs=disabled -Dzix:tests_cpp=disabled -Dpython.platlibdir=$(pwd)/opt/lib/python/site-packages/ -Dpython.purelibdir=$(pwd)/opt/lib/python/site-packages/
     - meson install -C build/meson
     - PKG_CONFIG_PATH=build/opt/lib/pkgconfig CYTHONIZE=1 ./setup.py sdist
     - PKG_CONFIG_PATH=build/opt/lib/pkgconfig pyproject-build -n

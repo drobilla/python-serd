@@ -53,24 +53,24 @@ cdef extern from "serd/serd.h":
 
     ctypedef struct SerdNode
 
-    ctypedef struct SerdAllocator
+    ctypedef struct ZixAllocator
 
-    ctypedef struct SerdStringView:
-        const char* buf
-        size_t      len
+    ctypedef struct ZixStringView:
+        const char* data
+        size_t      length
 
     ctypedef struct SerdBuffer:
-        SerdAllocator* allocator
-        void*          buf
-        size_t         len
+        ZixAllocator* allocator
+        void*         buf
+        size_t        len
 
     ctypedef struct SerdURIView:
-        SerdStringView scheme
-        SerdStringView authority
-        SerdStringView path_prefix
-        SerdStringView path
-        SerdStringView query
-        SerdStringView fragment
+        ZixStringView scheme
+        ZixStringView authority
+        ZixStringView path_prefix
+        ZixStringView path
+        ZixStringView query
+        ZixStringView fragment
 
     ctypedef union SerdValueData:
         bint     as_bool
@@ -95,7 +95,7 @@ cdef extern from "serd/serd.h":
     ctypedef enum SerdWriterFlag : pass
     ctypedef uint32_t SerdWriterFlags
 
-    void serd_free(SerdAllocator* allocator, void* ptr)
+    void zix_free(ZixAllocator* allocator, void* ptr)
 
     # String Utilities
 
@@ -160,41 +160,129 @@ cdef extern from "serd/serd.h":
 
     # Node
 
-    SerdNode* serd_node_from_syntax(SerdAllocator* allocator,
+
+    ctypedef struct SerdWriteResult:
+        SerdStatus status
+        size_t count
+
+    ctypedef enum SerdNodeArgsType: pass
+
+    ctypedef struct SerdNodeTokenArgs:
+        SerdNodeType   type
+        ZixStringView string
+
+    ctypedef struct SerdNodeParsedURIArgs:
+        SerdURIView uri
+
+    ctypedef struct SerdNodeFileURIArgs:
+        ZixStringView path
+        ZixStringView hostname
+
+    ctypedef struct SerdNodeLiteralArgs:
+        ZixStringView string
+        SerdNodeFlags  flags
+        ZixStringView meta
+
+    ctypedef struct SerdNodePrimitiveArgs:
+        SerdValue value
+
+    ctypedef struct SerdNodeDecimalArgs:
+        double value
+
+    ctypedef struct SerdNodeIntegerArgs:
+        int64_t value
+
+    ctypedef struct SerdNodeBlobArgs:
+        size_t      size
+        const void* data
+
+    ctypedef union SerdNodeArgsData:
+        SerdNodeTokenArgs     as_token
+        SerdNodeParsedURIArgs as_parsed_uri
+        SerdNodeFileURIArgs   as_file_uri
+        SerdNodeLiteralArgs   as_literal
+        SerdNodePrimitiveArgs as_primitive
+        SerdNodeDecimalArgs   as_decimal
+        SerdNodeIntegerArgs   as_integer
+        SerdNodeBlobArgs      as_blob
+
+    ctypedef struct SerdNodeArgs:
+        SerdNodeArgsType type
+        SerdNodeArgsData data
+
+    SerdNodeArgs serd_a_token(SerdNodeType type, ZixStringView string)
+    SerdNodeArgs serd_a_parsed_uri(SerdURIView uri)
+    SerdNodeArgs serd_a_file_uri(ZixStringView path, ZixStringView hostname)
+    SerdNodeArgs serd_a_literal(ZixStringView string, SerdNodeFlags flags, ZixStringView meta)
+
+    SerdNodeArgs serd_a_primitive(SerdValue value)
+    SerdNodeArgs serd_a_decimal(double value)
+    SerdNodeArgs serd_a_integer(int64_t value)
+    SerdNodeArgs serd_a_hex(size_t size, const void* data)
+    SerdNodeArgs serd_a_base64(size_t size, const void* data)
+
+    SerdWriteResult serd_node_construct(size_t       buf_size,
+                                        void*        buf,
+                                        SerdNodeArgs args)
+
+    SerdNode* serd_node_new(ZixAllocator* allocator, SerdNodeArgs args)
+
+    SerdNode* serd_node_copy(ZixAllocator* allocator, const SerdNode* node)
+
+    void serd_node_free(ZixAllocator* allocator, SerdNode* node)
+
+    SerdNodeType serd_node_type(const SerdNode* node)
+
+    size_t serd_node_length(const SerdNode* node)
+
+    SerdNodeFlags serd_node_flags(const SerdNode* node)
+
+    const char* serd_node_string(const SerdNode* node)
+
+    ZixStringView serd_node_string_view(const SerdNode* node)
+
+    SerdURIView serd_node_uri_view(const SerdNode* node)
+
+    const SerdNode* serd_node_datatype(const SerdNode* node)
+
+    const SerdNode* serd_node_language(const SerdNode* node)
+
+    SerdValue serd_node_value(const SerdNode* node)
+
+    SerdValue serd_node_value_as(const SerdNode* node,
+                                 SerdValueType   type,
+                                 bint            lossy)
+
+    size_t serd_node_decoded_size(const SerdNode* node)
+
+    SerdWriteResult serd_node_decode(const SerdNode* node,
+                                     size_t          buf_size,
+                                     void*           buf)
+
+    bint serd_node_equals(const SerdNode* a, const SerdNode* b)
+
+    int serd_node_compare(const SerdNode* a, const SerdNode* b)
+
+    SerdNode* serd_node_from_syntax(ZixAllocator* allocator,
                                     const char* str,
                                     SerdSyntax  syntax,
                                     SerdEnv*    env)
 
-    char* serd_node_to_syntax(SerdAllocator* allocator,
+    char* serd_node_to_syntax(ZixAllocator* allocator,
                               const SerdNode* node,
                               SerdSyntax      syntax,
                               const SerdEnv*  env)
-
-    SerdNode* serd_new_token(SerdAllocator* allocator, SerdNodeType type, SerdStringView string)
-    SerdNode* serd_new_string(SerdAllocator* allocator, SerdStringView string)
-    SerdNode* serd_new_uri(SerdAllocator* allocator, SerdURIView uri)
-    SerdNode* serd_new_file_uri(SerdAllocator* allocator, SerdStringView path, SerdStringView hostname)
-
-    SerdNode* serd_new_literal(SerdAllocator* allocator,
-                               SerdStringView string,
-                               SerdNodeFlags  flags,
-                               SerdStringView meta)
-
-    SerdNode* serd_new_value(SerdAllocator* allocator, SerdValue value)
-    SerdNode* serd_new_decimal(SerdAllocator* allocator, double d)
-    SerdNode* serd_new_integer(SerdAllocator* allocator, int64_t i)
-    SerdNode* serd_new_base64(SerdAllocator* allocator, const void* buf, size_t size)
 
     bint            serd_get_boolean(const SerdNode* node)
     double          serd_get_double(const SerdNode* node)
     float           serd_get_float(const SerdNode* node)
     int64_t         serd_get_integer(const SerdNode* node)
-    SerdNode*       serd_node_copy(SerdAllocator* allocator, const SerdNode* node)
-    void            serd_node_free(SerdAllocator* allocator, SerdNode* node)
+    SerdNode*       serd_node_copy(ZixAllocator* allocator, const SerdNode* node)
+    void            serd_node_free(ZixAllocator* allocator, SerdNode* node)
     SerdNodeType    serd_node_type(const SerdNode* node)
     const char*     serd_node_string(const SerdNode* node)
     size_t          serd_node_length(const SerdNode* node)
-    SerdStringView  serd_node_string_view(const SerdNode* node)
+    ZixStringView   serd_node_string_view(const SerdNode* node)
     SerdURIView     serd_node_uri_view(const SerdNode* node)
     const SerdNode* serd_node_datatype(const SerdNode* node)
     const SerdNode* serd_node_language(const SerdNode* node)
@@ -234,68 +322,25 @@ cdef extern from "serd/serd.h":
 
     # World
 
-    SerdWorld*      serd_world_new(SerdAllocator* allocator)
+    SerdWorld*      serd_world_new(ZixAllocator* allocator)
     void            serd_world_free(SerdWorld* world)
     SerdNodes*      serd_world_nodes(SerdWorld* world)
     const SerdNode* serd_world_get_blank(SerdWorld* world)
 
-    SerdAllocator* serd_world_allocator(const SerdWorld* world)
-
-    # TODO: logging
-
-    ctypedef enum SerdLogLevel: pass
-
-    cdef struct SerdLogField:
-        const char* key
-        const char* value
-
-    cdef struct SerdLogEntry:
-        const char*         domain
-        const SerdLogField* fields
-        const char*         fmt
-        va_list*            args
-        SerdLogLevel        level
-        size_t              n_fields
-
-    ctypedef SerdStatus (*SerdLogFunc)(void* handle, const SerdLogEntry* entry)
-
-    # SerdStatus serd_quiet_error_func(void* handle, const SerdLogEntry* entry)
-
-    # const char* serd_log_entry_get_field(const SerdLogEntry* entry,
-    #                                      const char*         key)
-
-    void serd_world_set_log_func(SerdWorld*  world,
-                                 SerdLogFunc log_func,
-                                 void*       handle)
-
-    # SerdStatus serd_world_vlogf(const SerdWorld*    world,
-    #                             const char*         domain,
-    #                             SerdLogLevel        level,
-    #                             size_t              n_fields,
-    #                             const SerdLogField* fields,
-    #                             const char*         fmt,
-    #                             va_list             args)
-
-    SerdStatus serd_world_logf(const SerdWorld*    world,
-                               const char*         domain,
-                               SerdLogLevel        level,
-                               size_t              n_fields,
-                               const SerdLogField* fields,
-                               const char*         fmt,
-                               ...)
+    ZixAllocator* serd_world_allocator(const SerdWorld* world)
 
     # Environment
 
-    SerdEnv*        serd_env_new(const SerdWorld* world, const SerdStringView base_uri)
-    SerdEnv*        serd_env_copy(SerdAllocator* allocator, const SerdEnv* env)
+    SerdEnv*        serd_env_new(ZixAllocator* allocator, const ZixStringView base_uri)
+    SerdEnv*        serd_env_copy(ZixAllocator* allocator, const SerdEnv* env)
     bint            serd_env_equals(const SerdEnv* a, const SerdEnv* b)
     void            serd_env_free(SerdEnv* env)
     const SerdNode* serd_env_base_uri(SerdEnv* env)
-    SerdStatus      serd_env_set_base_uri(SerdEnv* env, SerdStringView uri)
+    SerdStatus      serd_env_set_base_uri(SerdEnv* env, ZixStringView uri)
 
     SerdStatus serd_env_set_prefix(SerdEnv*       env,
-                                   SerdStringView name,
-                                   SerdStringView uri)
+                                   ZixStringView name,
+                                   ZixStringView uri)
 
     SerdNode* serd_env_expand_node(const SerdEnv* env, const SerdNode* node)
 
@@ -308,17 +353,17 @@ cdef extern from "serd/serd.h":
 
     # Statement
 
-    SerdStatement* serd_statement_new(SerdAllocator*   allocator,
+    SerdStatement* serd_statement_new(ZixAllocator*   allocator,
                                       const SerdNode*  s,
                                       const SerdNode*  p,
                                       const SerdNode*  o,
                                       const SerdNode*  g,
                                       const SerdCaret* caret)
 
-    SerdStatement* serd_statement_copy(SerdAllocator*       allocator,
+    SerdStatement* serd_statement_copy(ZixAllocator*       allocator,
                                        const SerdStatement* statement)
 
-    void serd_statement_free(SerdAllocator* allocator,
+    void serd_statement_free(ZixAllocator* allocator,
                              SerdStatement* statement)
 
     const SerdNode* serd_statement_node(const SerdStatement* statement,
@@ -341,7 +386,7 @@ cdef extern from "serd/serd.h":
 
     # Iter
 
-    SerdCursor* serd_cursor_copy(SerdAllocator*    allocator,
+    SerdCursor* serd_cursor_copy(ZixAllocator*    allocator,
                                  const SerdCursor* cursor)
 
     const SerdStatement* serd_cursor_get(const SerdCursor* cursor)
@@ -349,23 +394,23 @@ cdef extern from "serd/serd.h":
     SerdStatus serd_cursor_advance(SerdCursor* cursor)
     bint serd_cursor_is_end(const SerdCursor* lhs)
     bint serd_cursor_equals(const SerdCursor* lhs, const SerdCursor* rhs)
-    void serd_cursor_free(SerdCursor* cursor)
+    void serd_cursor_free(ZixAllocator* allocator, SerdCursor* cursor)
 
     # Range
 
-    SerdStatus serd_describe_range(const SerdCursor*      range,
-                                   const SerdSink*        sink,
+    SerdStatus serd_describe_range(ZixAllocator*     allocator,
+                                   const SerdCursor* range,
+                                   const SerdSink*   sink,
                                    SerdDescribeFlags flags)
-
 
     # Sink
 
     ctypedef void (*SerdFreeFunc)(void* ptr)
 
-    SerdSink* serd_sink_new(const SerdWorld* world,
-                            void*            handle,
-                            SerdEventFunc    event_func,
-                            SerdFreeFunc     free_handle)
+    SerdSink* serd_sink_new(ZixAllocator* allocator,
+                            void*         handle,
+                            SerdEventFunc event_func,
+                            SerdFreeFunc  free_handle)
 
     void serd_sink_free(SerdSink* sink)
 
@@ -474,11 +519,8 @@ cdef extern from "serd/serd.h":
     void            serd_writer_free(SerdWriter* writer)
     const SerdSink* serd_writer_sink(SerdWriter* writer)
 
-    SerdStatus serd_writer_set_base_uri(SerdWriter*     writer,
-                                        const SerdNode* uri)
-
     SerdStatus serd_writer_set_root_uri(SerdWriter*     writer,
-                                        SerdStringView uri)
+                                        ZixStringView uri)
 
     SerdStatus serd_writer_finish(SerdWriter* writer)
 
@@ -488,7 +530,7 @@ cdef extern from "serd/serd.h":
                               SerdStatementOrder default_order,
                               SerdModelFlags     flags)
 
-    SerdModel*        serd_model_copy(SerdAllocator* allocator, const SerdModel* model)
+    SerdModel*        serd_model_copy(ZixAllocator* allocator, const SerdModel* model)
     bint              serd_model_equals(const SerdModel* a, const SerdModel* b)
     void              serd_model_free(SerdModel* model)
     SerdWorld*        serd_model_world(SerdModel* model)
@@ -496,19 +538,18 @@ cdef extern from "serd/serd.h":
     SerdModelFlags    serd_model_flags(const SerdModel* model)
     size_t            serd_model_size(const SerdModel* model)
     bint              serd_model_empty(const SerdModel* model)
-    SerdCursor*       serd_model_begin(const SerdModel* model)
+    SerdCursor*       serd_model_begin(ZixAllocator* allocator, const SerdModel* model)
     const SerdCursor* serd_model_end(const SerdModel* model)
-    SerdCursor*       serd_model_begin_ordered(const SerdModel* model,
+    SerdCursor*       serd_model_begin_ordered(ZixAllocator* allocator,
+                                               const SerdModel* model,
                                                SerdStatementOrder order)
 
     SerdStatus serd_model_add_index(SerdModel* model, SerdStatementOrder order)
 
     SerdStatus serd_model_drop_index(SerdModel* model, SerdStatementOrder order)
 
-    SerdCursor* serd_model_ordered(const SerdModel*         model,
-                                   const SerdStatementOrder order)
-
-    SerdCursor* serd_model_find(const SerdModel* model,
+    SerdCursor* serd_model_find(ZixAllocator* allocator,
+                                const SerdModel* model,
                                 const SerdNode*  s,
                                 const SerdNode*  p,
                                 const SerdNode*  o,
@@ -558,19 +599,19 @@ cdef extern from "serd/serd.h":
 
     # Caret
 
-    SerdCaret* serd_caret_new(SerdAllocator*  allocator,
+    SerdCaret* serd_caret_new(ZixAllocator*  allocator,
                               const SerdNode* name,
                               unsigned        line,
                               unsigned        col)
 
-    SerdCaret* serd_caret_copy(SerdAllocator* allocator,
+    SerdCaret* serd_caret_copy(ZixAllocator* allocator,
                                const SerdCaret* caret)
 
-    void serd_caret_free(SerdAllocator* allocator, SerdCaret* caret)
+    void serd_caret_free(ZixAllocator* allocator, SerdCaret* caret)
 
     bint serd_caret_equals(const SerdCaret* lhs, const SerdCaret* rhs)
 
-    const SerdNode* serd_caret_name(const SerdCaret* caret)
+    const SerdNode* serd_caret_document(const SerdCaret* caret)
     unsigned        serd_caret_line(const SerdCaret* caret)
     unsigned        serd_caret_column(const SerdCaret* caret)
 
@@ -599,7 +640,7 @@ cdef SerdValue _value(v):
     raise ValueError("Unsupported value type %s" % type(v))
 
 
-cdef SerdStringView _empty_string = SerdStringView("", 0)
+cdef ZixStringView _empty_string = ZixStringView("", 0)
 
 
 class _WrapSentinel:
@@ -611,27 +652,29 @@ class Status(enum.IntEnum):
 
     SUCCESS = 0,       # Success
     FAILURE = 1,       # Non-fatal failure
-    UNKNOWN_ERROR = 2, # Unknown error
-    NO_DATA = 3,       # Missing input
-    OVERFLOW = 4,      # Insufficient space
+    NO_DATA = 2,       # Missing input
+    OVERFLOW = 3,      # Insufficient space
 
-    BAD_ALLOC = 5,     # Memory allocation failed
+    UNKNOWN_ERROR = 4, # Unknown error
+
+    BAD_SYNTAX = 5,    # Invalid syntax
     BAD_ARG = 6,       # Invalid argument
-    BAD_CALL = 7,      # Invalid call
+    BAD_LABEL = 7,     # Encountered clashing blank node label
     BAD_CURIE = 8,     # Invalid CURIE or unknown namespace prefix
-    BAD_CURSOR = 9,    # Use of invalidated cursor
-    BAD_EVENT = 10,    # Invalid event in stream
-    BAD_INDEX = 11,    # No optimal model index available
-    BAD_LABEL = 12,    # Encountered clashing blank node label
-    BAD_LITERAL = 13,  # Invalid literal
-    BAD_PATTERN = 14,  # Invalid statement pattern
-    BAD_READ = 15,     # Error reading from file
-    BAD_STACK = 16,    # Stack overflow
-    BAD_SYNTAX = 17,   # Invalid syntax
-    BAD_TEXT = 18,     # Invalid text encoding
-    BAD_URI = 19,      # Invalid or unresolved URI
-    BAD_WRITE = 20,    # Error writing to file
-    BAD_DATA = 21,     # Invalid data
+    BAD_ALLOC = 9,     # Memory allocation failed
+    BAD_READ = 10,     # Error reading from file
+    BAD_WRITE = 11,    # Error writing to file
+    BAD_STREAM = 12,   # File or stream error
+    BAD_STACK = 13,    # Stack overflow
+    BAD_TEXT = 14,     # Invalid text encoding
+    BAD_CALL = 15,     # Invalid call
+    BAD_EVENT = 16,    # Invalid event in stream
+    BAD_URI = 17,      # Invalid or unresolved URI
+    BAD_DATA = 18,     # Invalid data
+    BAD_LITERAL = 19,  # Invalid literal
+    BAD_PATTERN = 20,  # Invalid statement pattern
+    BAD_CURSOR = 21,   # Use of invalidated cursor
+    BAD_INDEX = 22,    # No optimal model index available
 
 
 class Syntax(enum.IntEnum):
@@ -648,12 +691,14 @@ class StatementFlags(enum.IntFlag):
     """Flags indicating inline abbreviation information for a statement."""
 
     EMPTY_S = 1 << 0  # Empty blank node subject
-    ANON_S = 1 << 1  # Start of anonymous subject
-    ANON_O = 1 << 2  # Start of anonymous object
-    LIST_S = 1 << 3  # Start of list subject
-    LIST_O = 1 << 4  # Start of list object
-    TERSE_S = 1 << 5  # Terse serialisation of new subject
-    TERSE_O = 1 << 6  # Terse serialisation of new object
+    EMPTY_O = 1 << 1  # Empty blank node object
+    EMPTY_G = 1 << 2  # Empty blank node graph
+    ANON_S = 1 << 3   # Start of anonymous subject
+    ANON_O = 1 << 4   # Start of anonymous object
+    LIST_S = 1 << 5   # Start of list subject
+    LIST_O = 1 << 6   # Start of list object
+    TERSE_S = 1 << 7  # Terse serialisation of new subject
+    TERSE_O = 1 << 8  # Terse serialisation of new object
 
 
 class DescribeFlags(enum.IntFlag):
@@ -677,8 +722,9 @@ class NodeType(enum.IntEnum):
 
     LITERAL = 1  # Literal value
     URI = 2  # URI (absolute or relative)
-    BLANK = 3  # Blank node
-    VARIABLE = 4  # Variable node
+    CURIE = 3  # CURIE (shortened URI)
+    BLANK = 4  # Blank node
+    VARIABLE = 5  # Variable node
 
 
 class NodeFlag(enum.IntEnum):
@@ -790,7 +836,7 @@ def _tocstr(s: str):
 
 def _string_view(s: str):
     encoded = s.encode('utf-8')
-    return SerdStringView(encoded, len(encoded)) # FIXME: len?
+    return ZixStringView(encoded, len(encoded)) # FIXME: len?
 
 
 def _fromcstr(const char* s):
@@ -1207,20 +1253,23 @@ cdef class Node:
 
         if isinstance(v, str):
             value_view = _string_view(v)
-            self._ptr = serd_new_string(NULL, value_view)
+            self._ptr = serd_node_new(NULL, serd_a_token(NodeType.LITERAL, value_view))
         elif isinstance(v, bool):
-            self._ptr = serd_new_value(NULL, _value(v))
+            self._ptr = serd_node_new(NULL, serd_a_primitive(_value(v)))
         elif isinstance(v, int):
             if v < -9223372036854775808 or v > 9223372036854775807:
                 int_string = str(v)
-                self._ptr = serd_new_literal(NULL,
-                                             _string_view(int_string),
-                                             <SerdNodeFlags>2, # SERD_HAS_DATATYPE
-                                             _string_view("http://www.w3.org/2001/XMLSchema#integer"))
+                self._ptr = serd_node_new(
+                    NULL,
+                    serd_a_literal(
+                        _string_view(int_string),
+                        #                        <SerdNodeFlags>2, # SERD_HAS_DATATYPE
+                        NodeFlag.HAS_DATATYPE,
+                        _string_view("http://www.w3.org/2001/XMLSchema#integer")))
             else:
-                self._ptr = serd_new_integer(NULL, v)
+                self._ptr = serd_node_new(NULL, serd_a_integer(v))
         else:
-            self._ptr = serd_new_value(NULL, _value(v))
+            self._ptr = serd_node_new(NULL, serd_a_primitive(_value(v)))
 
         assert self._ptr
 
@@ -1332,7 +1381,7 @@ cdef class Node:
         cstr = serd_node_to_syntax(NULL, self._ptr, syntax, cenv)
 
         result = _fromcstr(cstr)
-        serd_free(NULL, cstr)
+        zix_free(NULL, cstr)
         return result
 
 
@@ -1341,7 +1390,7 @@ cdef class Node:
 
 def string(s: str) -> Node:
     s_view = _string_view(s)
-    return Node._manage(serd_new_string(NULL, s_view))
+    return Node._manage(serd_node_new(NULL, serd_a_token(NodeType.LITERAL, s_view)))
 
 
 def plain_literal(s: str, lang: str = None) -> Node:
@@ -1349,10 +1398,13 @@ def plain_literal(s: str, lang: str = None) -> Node:
     if lang is not None:
         s_view = _string_view(s)
         lang_view = _string_view(lang)
-        return Node._manage(serd_new_literal(NULL, s_view, NodeFlag.HAS_LANGUAGE, lang_view))
+        return Node._manage(
+            serd_node_new(
+                NULL,
+                serd_a_literal(s_view, NodeFlag.HAS_LANGUAGE, lang_view)))
     else:
         s_view = _string_view(s)
-        return Node._manage(serd_new_string(NULL, s_view))
+        return Node._manage(serd_node_new(NULL, serd_a_token(NodeType.LITERAL, s_view)))
 
 
 def typed_literal(s: str, datatype) -> Node:
@@ -1360,52 +1412,52 @@ def typed_literal(s: str, datatype) -> Node:
     datatype_node = _uri_from_param(datatype)
     if type(datatype_node) == Node:
         datatype_uri_view = datatype_node.string_view()
-        return Node._manage(serd_new_literal(NULL, s_view, NodeFlag.HAS_DATATYPE, datatype_uri_view))
+        return Node._manage(serd_node_new(NULL, serd_a_literal(s_view, NodeFlag.HAS_DATATYPE, datatype_uri_view)))
 
     return None
 
 
 def blank(s: str) -> Node:
     s_view = _string_view(s)
-    return Node._manage(serd_new_token(NULL, NodeType.BLANK, s_view))
+    return Node._manage(serd_node_new(NULL, serd_a_token(NodeType.BLANK, s_view)))
 
 
 def uri(s: str) -> Node:
     s_view = _string_view(s)
-    return Node._manage(serd_new_token(NULL, NodeType.URI, s_view))
+    return Node._manage(serd_node_new(NULL, serd_a_token(NodeType.URI, s_view)))
 
 
 def file_uri(path: str, hostname: str = "") -> Node:
     path_view = _string_view(path)
     hostname_view = _string_view(hostname)
-    return Node._manage(serd_new_file_uri(NULL, path_view, hostname_view))
+    return Node._manage(serd_node_new(NULL, serd_a_file_uri(path_view, hostname_view)))
 
 
 def decimal(
     d: float,
 ) -> Node:
-    return Node._manage(serd_new_decimal(NULL, d))
+    return Node._manage(serd_node_new(NULL, serd_a_decimal(d)))
 
 
 def double(d: float) -> Node:
-    return Node._manage(serd_new_value(NULL, _value(d)))
+    return Node._manage(serd_node_new(NULL, serd_a_primitive(_value(d))))
 
 
 def integer(i: int) -> Node:
-    return Node._manage(serd_new_integer(NULL, i))
+    return Node._manage(serd_node_new(NULL, serd_a_integer(i)))
 
 
 def boolean(b: bool) -> Node:
-    return Node._manage(serd_new_value(NULL, _value(b)))
+    return Node._manage(serd_node_new(NULL, serd_a_primitive(_value(b))))
 
 
 def base64(const unsigned char[:] buf) -> Node:
-    return Node._manage(serd_new_base64(NULL, &buf[0], len(buf)))
+    return Node._manage(serd_node_new(NULL, serd_a_base64(len(buf), &buf[0])))
 
 
 def variable(s: str) -> Node:
     s_view = _string_view(s)
-    return Node._manage(serd_new_token(NULL, NodeType.VARIABLE, s_view))
+    return Node._manage(serd_node_new(NULL, serd_a_token(NodeType.VARIABLE, s_view)))
 
 
 cdef class Env:
@@ -1422,13 +1474,12 @@ cdef class Env:
         self._world = world
 
         if arg is None:
-            self._ptr = serd_env_new(world._ptr, _empty_string)
+            self._ptr = serd_env_new(NULL, _empty_string)
         elif type(arg) == Env:
-            self._ptr = serd_env_copy(serd_world_allocator(world._ptr),
-                                      (<Env>arg)._ptr)
+            self._ptr = serd_env_copy(NULL, (<Env>arg)._ptr)
         elif type(arg) == Node:
             arg_view = arg.string_view()
-            self._ptr = serd_env_new(world._ptr, arg_view)
+            self._ptr = serd_env_new(NULL, arg_view)
         else:
             raise TypeError("Bad argument type for Env(): %s" % type(arg))
 
@@ -1697,7 +1748,7 @@ cdef class FileInput(InputStream):
 #     cdef SerdBuffer _buffer
 
 #     def __dealloc__(self):
-#         serd_free(NULL, self._buffer.buf)
+#         zix_free(NULL, self._buffer.buf)
 #         self._buffer.buf = NULL
 #         self._buffer.len = 0
 #         # super().__dealloc__(self)
@@ -1759,7 +1810,7 @@ cdef class StringOutput(OutputStream):
         if self._output is None:
             super().close()
             self._output = _fromcstr(<const char*>self._buffer.buf)
-            serd_free(self._buffer.allocator, self._buffer.buf)
+            zix_free(self._buffer.allocator, self._buffer.buf)
             self._buffer.buf = NULL
             self._buffer.len = 0
 
@@ -1821,10 +1872,10 @@ cdef class Writer:
         """Return a sink interface that emits statements via this writer."""
         return SinkView._wrap(serd_writer_sink(self._ptr))
 
-    def set_base_uri(self, uri: Node) -> Status:
-        """Set the current output base URI, and emit a directive if applicable.
-        """
-        return Status(serd_writer_set_base_uri(self._ptr, uri._ptr))
+    # def set_base_uri(self, uri: Node) -> Status:
+    #     """Set the current output base URI, and emit a directive if applicable.
+    #     """
+    #     return Status(serd_writer_set_base_uri(self._ptr, uri._ptr))
 
     def set_root_uri(self, uri: str) -> Status:
         """Set the current root URI.
@@ -1907,7 +1958,7 @@ cdef class Model:
         if self.size() == 0:
             return self._end()
 
-        return Cursor._manage(serd_model_begin(self._ptr))
+        return Cursor._manage(serd_model_begin(NULL, self._ptr))
 
     def __contains__(self, statement):
         return self._find(Statement._from_param(statement)) != self._end()
@@ -2005,18 +2056,18 @@ cdef class Model:
             "Failed to erase range")
 
     # def begin(self) -> _Iter:
-    #     return _Iter._manage(serd_model_begin(self._ptr))
+    #     return _Iter._manage(serd_model_begin(NULL, self._ptr))
 
     def _end(self) -> Cursor:
         return Cursor._wrap(serd_model_end(self._ptr))
 
     def all(self) -> Cursor:
         """Return a range of all statements in the model in SPO order."""
-        return Cursor._manage(serd_model_begin(self._ptr))
+        return Cursor._manage(serd_model_begin(NULL, self._ptr))
 
     def ordered(self, order: StatementOrder) -> Cursor:
         """Return a range of all statements in the model in a given order."""
-        return Cursor._manage(serd_model_begin_ordered(self._ptr, order))
+        return Cursor._manage(serd_model_begin_ordered(NULL, self._ptr, order))
 
     # FIXME: ?
     def _find(self, statement) -> Cursor:
@@ -2027,6 +2078,7 @@ cdef class Model:
         g = statement.graph()
 
         c_iter = serd_model_find(
+            NULL,
             self._ptr,
             _unwrap_node(s),
             _unwrap_node(p),
@@ -2049,6 +2101,7 @@ cdef class Model:
 
         return Cursor._manage(
             serd_model_find(
+                NULL,
                 self._ptr,
                 _unwrap_node(subject),
                 _unwrap_node(predicate),
@@ -2283,6 +2336,7 @@ cdef class Statement:
 
     def subject(self) -> Node:
         """Return the subject node of this statement."""
+        assert self._ptr
         return Node._wrap(serd_statement_subject(self._ptr))
 
     def predicate(self) -> Node:
@@ -2334,7 +2388,7 @@ cdef class Cursor:
         self._ptr = serd_cursor_copy(NULL, (<Cursor>range)._ptr)
 
     def __dealloc__(self):
-        serd_cursor_free(self._ptr)
+        serd_cursor_free(NULL, self._ptr)
         self._ptr = NULL
 
     def __bool__(self):
@@ -2393,7 +2447,7 @@ cdef class Cursor:
         written instead, which is significantly faster since no searching is
         required, but can result in ugly output for Turtle or Trig.
         """
-        return Status(serd_describe_range(self._ptr, sink._cptr, flags))
+        return Status(serd_describe_range(NULL, self._ptr, sink._cptr, flags))
 
 
 cdef class Caret:
@@ -2406,7 +2460,7 @@ cdef class Caret:
         if ptr is NULL:
             return None
 
-        name_node = Node._wrap(serd_caret_name(ptr))
+        name_node = Node._wrap(serd_caret_document(ptr))
 
         cdef SerdCaret* copy = serd_caret_new(NULL,
                                               name_node._ptr,
@@ -2690,14 +2744,14 @@ cdef class Sink(SinkBase):
             self._parent = world
             self._env = Env(world)
             self._func = func
-            self._ptr = serd_sink_new(world._ptr, <void*>self, Sink._c_on_event, NULL)
+            self._ptr = serd_sink_new(NULL, <void*>self, Sink._c_on_event, NULL)
             self._cptr = self._ptr
             # TODO: get_env?
         else:
             self._parent = world
             self._env = Env(world)
             self._func = None
-            self._ptr = serd_sink_new(world._ptr, <void*>self, Sink._c_on_event, NULL)
+            self._ptr = serd_sink_new(NULL, <void*>self, Sink._c_on_event, NULL)
             self._cptr = self._ptr
             # TODO: get_env?
 
