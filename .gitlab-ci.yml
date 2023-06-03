@@ -32,7 +32,7 @@ pages:
     - mkdir -p .public
     - mv build/doc/html/ .public/
     - mv build/doc/singlehtml/ .public/
-    - mv build/sphinx/epub/Using-Serd-in-Python.epub .public/
+    - mv build/doc/epub/Using-Serd-in-Python.epub .public/
     - mv .public public
   needs:
     - x64
