@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-# Copyright 2020-2022 David Robillard <d@drobilla.net>
-# SPDX-License-Identifier: CC0-1.0 OR ISC
+# Copyright 2020-2023 David Robillard <d@drobilla.net>
+# SPDX-License-Identifier: 0BSD OR ISC
 
 """The configuration script for serd-python."""
 
