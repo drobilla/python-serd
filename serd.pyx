@@ -18,6 +18,8 @@ import cython
 from libc.stdint cimport int64_t, int32_t, int16_t, int8_t
 from libc.stdint cimport uint64_t, uint32_t, uint16_t, uint8_t
 
+from typing import Optional
+
 logger = logging.getLogger(__name__)
 
 cdef extern from "stdarg.h":
@@ -413,9 +415,6 @@ cdef extern from "serd/serd.h":
                             SerdFreeFunc  free_handle)
 
     void serd_sink_free(SerdSink* sink)
-
-    SerdStatus serd_sink_set_event_func(SerdSink*     sink,
-                                        SerdEventFunc event_func)
 
     SerdStatus serd_sink_write_event(const SerdSink*  sink,
                                      const SerdEvent* event)
@@ -2134,7 +2133,11 @@ cdef class Model:
             )
         )
 
-    def ask(self, s: Node, p: Node, o: Node, g: Node = None) -> bool:
+    def ask(self,
+            s: Optional[Node],
+            p: Optional[Node],
+            o: Optional[Node],
+            g: Optional[Node] = None) -> bool:
         """Return true iff the model contains a statement matching a pattern.
 
         None can be used as a wildcard which matches any node.
@@ -2147,7 +2150,11 @@ cdef class Model:
             _unwrap_node(g)
         )
 
-    def count(self, s: Node, p: Node, o: Node, g: Node = None) -> int:
+    def count(self,
+              s: Optional[Node],
+              p: Optional[Node],
+              o: Optional[Node],
+              g: Optional[Node] = None) -> int:
         """Return the number of statements in the model that match a pattern.
 
         None can be used as a wildcard which matches any node.
@@ -2315,7 +2322,11 @@ cdef class Statement:
 
         return "serd.Statement({})".format(", ".join(args))
 
-    def matches(self, s: Node, p: Node, o: Node, g: Node = None):
+    def matches(self,
+                s: Optional[Node],
+                p: Optional[Node],
+                o: Optional[Node],
+                g: Optional[Node] = None):
         """Return true iff this statement matches the given pattern.
 
         Nodes match if they are equivalent, or if one of them is NULL.  The
@@ -2472,7 +2483,7 @@ cdef class Caret:
         wrapper._name_node = name_node
         return wrapper
 
-    def __init__(self, name, line: uint = 1, col: uint = 0):
+    def __init__(self, name, line: uint32_t = 1, col: uint32_t = 0):
         if type(name) == Node:
             self._name_node = name
             self._ptr = serd_caret_new(NULL, self._name_node._ptr, line, col)
@@ -2594,7 +2605,7 @@ cdef class Event:
                       StatementFlags.TERSE_S,
                       StatementFlags.TERSE_O]:
                 if flags & f:
-                    active += ['serd.' + str(f)]
+                    active += ['serd.StatementFlags.' + f.name]
 
             return ' | '.join(active)
 
@@ -2744,14 +2755,14 @@ cdef class Sink(SinkBase):
             self._parent = world
             self._env = Env(world)
             self._func = func
-            self._ptr = serd_sink_new(NULL, <void*>self, Sink._c_on_event, NULL)
+            self._ptr = serd_sink_new(NULL, <void*>self, <SerdEventFunc>Sink._c_on_event, NULL)
             self._cptr = self._ptr
             # TODO: get_env?
         else:
             self._parent = world
             self._env = Env(world)
             self._func = None
-            self._ptr = serd_sink_new(NULL, <void*>self, Sink._c_on_event, NULL)
+            self._ptr = serd_sink_new(NULL, <void*>self, <SerdEventFunc>Sink._c_on_event, NULL)
             self._cptr = self._ptr
             # TODO: get_env?
 
